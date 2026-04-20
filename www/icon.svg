@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0a0e14"/>
+  <rect x="56" y="104" width="400" height="304" rx="10" fill="#0d1117" stroke="#39d9ff" stroke-width="4"/>
+  <rect x="56" y="104" width="400" height="48" rx="10" fill="#161b22"/>
+  <rect x="56" y="128" width="400" height="24" fill="#161b22"/>
+  <circle cx="96" cy="128" r="10" fill="#f85149"/>
+  <circle cx="128" cy="128" r="10" fill="#d29922"/>
+  <circle cx="160" cy="128" r="10" fill="#3fb950"/>
+  <text x="256" y="232" font-family="monospace" font-size="76" fill="#39d9ff" text-anchor="middle" font-weight="bold" letter-spacing="6">LPI</text>
+  <text x="256" y="278" font-family="monospace" font-size="26" fill="#8b949e" text-anchor="middle" letter-spacing="5">TRAINER</text>
+  <text x="80" y="346" font-family="monospace" font-size="24" fill="#3fb950">$ ./exam.sh</text>
+  <rect x="80" y="356" width="12" height="20" fill="#39d9ff" opacity="0.9"/>
+</svg>

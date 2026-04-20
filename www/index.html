@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LPI Exam Trainer v2.7</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --bg: #0a0e14;
+    --bg2: #0d1117;
+    --bg3: #161b22;
+    --border: #21262d;
+    --cyan: #39d9ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --white: #e6edf3;
+    --dim: #8b949e;
+    --purple: #bc8cff;
+    --orange: #f78166;
+    --glow-cyan: 0 0 10px rgba(57,217,255,0.4);
+    --glow-green: 0 0 10px rgba(63,185,80,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'JetBrains Mono', 'Share Tech Mono', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 20px;
+    padding-top: env(safe-area-inset-top, 20px);
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 20% 20%, rgba(57,217,255,0.03) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(63,185,80,0.03) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app {
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── HEADER ── */
+  .header {
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--cyan);
+    background: var(--bg3);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(57,217,255,0.04) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .header h1 {
+    font-size: 22px;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: var(--glow-cyan);
+  }
+  .header p { color: var(--dim); font-size: 12px; margin-top: 4px; }
+
+  /* ── WELCOME ── */
+  .welcome-panel {
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+  .welcome-panel p { color: var(--dim); margin-bottom: 8px; font-size: 13px; }
+  .welcome-panel .hint {
+    border-left: 2px solid var(--yellow);
+    padding: 6px 12px;
+    color: var(--yellow);
+    margin: 12px 0;
+    font-size: 12px;
+  }
+
+  .mode-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+
+  .mode-btn {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 14px 20px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-btn::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+    background: var(--cyan);
+    opacity: 0.08;
+    transition: width 0.15s;
+  }
+  .mode-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .mode-btn:hover::before { width: 100%; }
+  .mode-btn .btn-num { color: var(--cyan); margin-right: 12px; }
+  .mode-btn .btn-sub { color: var(--dim); font-size: 11px; display: block; margin-top: 2px; padding-left: 22px; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    height: 3px; background: var(--border);
+    margin-bottom: 16px;
+    border-radius: 0;
+  }
+  .progress-bar-fill {
+    height: 100%; background: var(--cyan);
+    transition: width 0.3s ease;
+    box-shadow: var(--glow-cyan);
+  }
+
+  /* ── QUESTION CARD ── */
+  .qcard {
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--purple);
+    background: var(--bg3);
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    animation: fadeSlide 0.2s ease;
+  }
+  @keyframes fadeSlide {
+    from { opacity:0; transform: translateY(6px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .qmeta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .qnum { color: var(--purple); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+  .qcounter { color: var(--dim); font-size: 11px; }
+  .qtimer { color: var(--yellow); font-size: 11px; }
+
+  .qtext {
+    color: var(--cyan);
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+    white-space: pre-line;
+  }
+  .qtext code {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    font-family: inherit;
+    color: var(--orange);
+    font-size: 12px;
+  }
+
+  /* ── CHOICES ── */
+  .choices { display: flex; flex-direction: column; gap: 8px; }
+
+  .choice-btn {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 11px 16px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.12s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    white-space: pre-line;
+    line-height: 1.5;
+  }
+  .choice-btn .choice-letter {
+    color: var(--dim);
+    min-width: 18px;
+    font-weight: 700;
+    transition: color 0.12s;
+    margin-top: 0;
+  }
+  .choice-btn:not(:disabled):hover { border-color: var(--cyan); }
+  .choice-btn:not(:disabled):hover .choice-letter { color: var(--cyan); }
+  .choice-btn.selected { border-color: var(--purple); background: rgba(188,140,255,0.08); }
+  .choice-btn.selected .choice-letter { color: var(--purple); }
+  .choice-btn.correct-reveal { border-color: var(--green); background: rgba(63,185,80,0.1); color: var(--green); }
+  .choice-btn.correct-reveal .choice-letter { color: var(--green); }
+  .choice-btn.wrong-reveal { border-color: var(--red); background: rgba(248,81,73,0.1); color: var(--red); }
+  .choice-btn.wrong-reveal .choice-letter { color: var(--red); }
+  .choice-btn:disabled { cursor: default; }
+
+  /* ── FILL BLANK ── */
+  .fill-input-wrap { margin-top: 8px; }
+  .fill-input {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--cyan);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 14px;
+    width: 100%;
+    max-width: 360px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .fill-input:focus { border-color: var(--cyan); box-shadow: var(--glow-cyan); }
+
+  /* ── VERDICT ── */
+  .verdict {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: none;
+    animation: fadeSlide 0.15s ease;
+  }
+  .verdict.show { display: block; }
+  .verdict.right { border-color: var(--green); background: rgba(63,185,80,0.06); }
+  .verdict.wrong { border-color: var(--red); background: rgba(248,81,73,0.06); }
+  .verdict-text { font-size: 15px; font-weight: 700; }
+  .verdict.right .verdict-text { color: var(--green); }
+  .verdict.wrong .verdict-text { color: var(--red); }
+  .verdict-answer { color: var(--dim); font-size: 12px; margin-top: 6px; white-space: pre-line; }
+  .verdict-answer span { color: var(--green); }
+
+  /* ── ACTIONS ── */
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .action-btn {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.12s;
+    letter-spacing: 0.5px;
+  }
+  .action-btn.primary { border-color: var(--cyan); color: var(--cyan); }
+  .action-btn.primary:hover { background: rgba(57,217,255,0.1); box-shadow: var(--glow-cyan); }
+  .action-btn.secondary:hover { border-color: var(--dim); }
+  .action-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* ── RESULTS ── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 20px 0;
+  }
+  .result-stat {
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .result-stat .stat-val { font-size: 28px; font-weight: 700; }
+  .result-stat .stat-lbl { font-size: 11px; color: var(--dim); margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
+  .result-stat.green .stat-val { color: var(--green); text-shadow: var(--glow-green); }
+  .result-stat.red .stat-val { color: var(--red); }
+  .result-stat.yellow .stat-val { color: var(--yellow); }
+  .result-stat.cyan .stat-val { color: var(--cyan); text-shadow: var(--glow-cyan); }
+  .grade-bar-wrap {
+    height: 6px; background: var(--border);
+    margin: 16px 0; border-radius: 0;
+  }
+  .grade-bar-fill {
+    height: 100%;
+    transition: width 1s ease;
+    border-radius: 0;
+  }
+
+  /* ── SPEC QUESTION INPUT ── */
+  .spec-input-wrap { margin: 16px 0; }
+  .spec-input {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--cyan);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 18px;
+    padding: 10px 14px;
+    width: 80px;
+    outline: none;
+    text-align: center;
+  }
+  .spec-input:focus { box-shadow: var(--glow-cyan); }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+
+  .status-bar {
+    display: flex; justify-content: space-between;
+    color: var(--dim); font-size: 11px;
+    padding: 8px 0;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── SELECT HINT ── */
+  .select-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--yellow);
+    background: rgba(210,153,34,0.08);
+    color: var(--yellow);
+    font-size: 12px;
+    padding: 5px 12px;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+  }
+  .select-hint .sel-count {
+    font-weight: 700;
+    transition: color 0.15s;
+  }
+  .select-hint.done {
+    border-color: var(--green);
+    background: rgba(63,185,80,0.08);
+    color: var(--green);
+  }
+
+  /* ── NAME ENTRY ── */
+  .name-entry-wrap { margin: 16px 0 8px; }
+  .name-entry-wrap label { color: var(--dim); font-size: 11px; display: block; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+  .name-input {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--cyan);
+    color: var(--white);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 14px;
+    width: 100%;
+    max-width: 340px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .name-input:focus { border-color: var(--cyan); box-shadow: var(--glow-cyan); }
+
+  /* ── LEADERBOARD ── */
+  .lb-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .lb-table th {
+    color: var(--dim); font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border);
+  }
+  .lb-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .lb-table tr:last-child td { border-bottom: none; }
+  .lb-table tr:hover td { background: rgba(57,217,255,0.03); }
+  .lb-rank { color: var(--dim); font-weight: 700; min-width: 28px; }
+  .lb-rank.gold   { color: #ffd700; }
+  .lb-rank.silver { color: #c0c0c0; }
+  .lb-rank.bronze { color: #cd7f32; }
+  .lb-name  { color: var(--cyan); }
+  .lb-score { font-weight: 700; }
+  .lb-score.s-good { color: var(--green); }
+  .lb-score.s-ok   { color: var(--yellow); }
+  .lb-score.s-bad  { color: var(--red); }
+  .lb-time  { color: var(--dim); font-size: 12px; }
+  .lb-date  { color: var(--dim); font-size: 11px; }
+  .lb-empty { color: var(--dim); text-align: center; padding: 36px 0; font-size: 13px; }
+  .lb-loading { color: var(--cyan); text-align: center; padding: 36px 0; font-size: 12px; opacity: 0.7; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1>&#9632; LPI Exam Trainer 2.0</h1>
+    <p>Linux Professional Institute Essentials &mdash; v2.7 &bull; 80 Questions &bull; by DG</p>
+  </div>
+
+  <!-- WELCOME -->
+  <div id="screen-welcome" class="screen active">
+    <div class="welcome-panel">
+      <p>Welcome! Select a mode to begin.</p>
+      <div class="hint">
+        &#9658; For multiple-answer questions, click all correct options before submitting.<br>
+        &#9658; For fill-in-the-blank, type your answer exactly as the command appears.
+      </div>
+      <div class="mode-buttons">
+        <button class="mode-btn" onclick="startLearn()">
+          <span class="btn-num">[1]</span> Learning Mode
+          <span class="btn-sub">All 80 questions in order, review each answer before continuing</span>
+        </button>
+        <button class="mode-btn" onclick="startExam()">
+          <span class="btn-num">[2]</span> Exam Simulator
+          <span class="btn-sub">40 random questions &mdash; timed, graded at the end</span>
+        </button>
+        <button class="mode-btn" onclick="showSpecific()">
+          <span class="btn-num">[3]</span> Specific Question
+          <span class="btn-sub">Jump to any question by number (1&ndash;80)</span>
+        </button>
+        <button class="mode-btn" onclick="showLeaderboard()">
+          <span class="btn-num">[4]</span> Leaderboard
+          <span class="btn-sub">Top scores from Exam Simulator sessions</span>
+        </button>
+      </div>
+    </div>
+    <div class="status-bar">
+      <span>LPI Linux Essentials</span>
+      <span>80 questions available</span>
+    </div>
+  </div>
+
+  <!-- SPECIFIC SELECT -->
+  <div id="screen-spec" class="screen">
+    <div class="welcome-panel">
+      <p>Enter a question number (1&ndash;80):</p>
+      <div class="spec-input-wrap">
+        <input type="number" class="spec-input" id="spec-num" min="1" max="80" value="1"
+               onkeydown="if(event.key==='Enter') goSpecific()">
+      </div>
+      <div class="actions">
+        <button class="action-btn primary" onclick="goSpecific()">GO</button>
+        <button class="action-btn secondary" onclick="showScreen('welcome')">BACK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="screen-quiz" class="screen">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="qcard">
+      <div class="qmeta">
+        <span class="qnum" id="q-label">QUESTION 1</span>
+        <span class="qcounter" id="q-counter">1 / 80</span>
+        <span class="qtimer" id="q-timer">&#9201; 00:00</span>
+      </div>
+      <div class="qtxt" id="q-text"></div>
+      <div id="q-select-hint" style="display:none"></div>
+      <div id="q-choices"></div>
+    </div>
+    <div class="verdict" id="verdict">
+      <div class="verdict-text" id="verdict-text"></div>
+      <div class="verdict-answer" id="verdict-answer"></div>
+    </div>
+    <div class="actions">
+      <button class="action-btn primary" id="btn-submit" onclick="submitAnswer()">SUBMIT</button>
+      <button class="action-btn primary" id="btn-next" onclick="nextQuestion()" style="display:none">NEXT &#8594;</button>
+      <button class="action-btn secondary" id="btn-end-early" onclick="confirmEnd()">END EXAM</button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="screen-results" class="screen">
+    <div class="qcard" style="border-top-color: var(--yellow);">
+      <div class="qnum" style="color:var(--yellow); margin-bottom:16px; letter-spacing:2px;">&#9632; END OF EXAM</div>
+      <div class="results-grid">
+        <div class="result-stat green">
+          <div class="stat-val" id="r-score">0</div>
+          <div class="stat-lbl">Correct</div>
+        </div>
+        <div class="result-stat red">
+          <div class="stat-val" id="r-wrong">0</div>
+          <div class="stat-lbl">Wrong</div>
+        </div>
+        <div class="result-stat cyan">
+          <div class="stat-val" id="r-pct">0%</div>
+          <div class="stat-lbl">Score</div>
+        </div>
+        <div class="result-stat yellow">
+          <div class="stat-val" id="r-time">0:00</div>
+          <div class="stat-lbl">Time</div>
+        </div>
+      </div>
+      <div class="grade-bar-wrap">
+        <div class="grade-bar-fill" id="grade-bar" style="width:0%"></div>
+      </div>
+      <hr class="divider">
+      <div id="name-entry-section" style="display:none;">
+        <div class="name-entry-wrap">
+          <label>Enter your name to join the leaderboard:</label>
+          <input type="text" class="name-input" id="player-name" placeholder="Your name..." maxlength="30"
+                 onkeydown="if(event.key==='Enter') submitLeaderboard()">
+        </div>
+        <div class="actions" style="margin-top:10px; margin-bottom:16px;">
+          <button class="action-btn primary" onclick="submitLeaderboard()">JOIN LEADERBOARD</button>
+          <button class="action-btn secondary" onclick="showScreen('welcome')">SKIP</button>
+        </div>
+        <hr class="divider">
+      </div>
+      <div class="actions">
+        <button class="action-btn primary" onclick="showScreen('welcome')">TRY AGAIN</button>
+        <button class="action-btn secondary" onclick="showLeaderboard()">LEADERBOARD</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div id="screen-leaderboard" class="screen">
+    <div class="qcard" style="border-top-color: var(--cyan);">
+      <div class="qnum" style="color:var(--cyan); margin-bottom:16px; letter-spacing:2px;">&#9632; LEADERBOARD &mdash; EXAM SIMULATOR</div>
+      <div id="leaderboard-content"></div>
+      <hr class="divider">
+      <div class="actions">
+        <button class="action-btn primary" onclick="showScreen('welcome')">BACK TO MENU</button>
+        <button class="action-btn secondary" onclick="showLeaderboard()">REFRESH</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://iaffro.com/251/lpisim/api.php';
+
+const QUESTIONS = [
+  {"id":1,"question":"What are the differences between hard disk drives and solid state disks? (Choose two.)","type":"mc","choices":["Hard disks have a motor and moving parts, solid state disks do not.","Hard disks can fail due to physical damage, while solid state disks cannot fail.","Solid state disks can store many times as much data as hard disk drives.","/dev/sda is a hard disk device while /dev/ssda is a solid state disk.","Solid state disks provide faster access to stored data than hard disks."],"correct":["Hard disks have a motor and moving parts, solid state disks do not.","Solid state disks provide faster access to stored data than hard disks."]},
+  {"id":2,"question":"Reverse DNS assigns hostnames to IP addresses. How is the name of the IP address 198.51.100.165 stored on a DNS server?","type":"mc","choices":["In the A record for 165.100.51.198.ipv4.arpa.","In the PTR record for 165.100.51.198.in-addr.arpa.","In the RNAME record for 198-51-100-165.rev.arpa.","In the ARPA record for 165.100.51.198.rev.","In the REV record for arpa.in-addr.198.51.100.165."],"correct":["In the PTR record for 165.100.51.198.in-addr.arpa."]},
+  {"id":3,"question":"Which of the following types of bus can connect hard disk drives with the motherboard?","type":"mc","choices":["The RAM bus","The NUMA bus","The CPU bus","The SATA bus","The Auto bus"],"correct":["The SATA bus"]},
+  {"id":4,"question":"Members of a team already have experience using Red Hat Enterprise Linux. For a small hobby project, the team wants to set up a Linux server without paying for a subscription. Which of the following Linux distributions allows the team members to apply as much of their Red Hat Enterprise Linux knowledge as possible?","type":"mc","choices":["Ubuntu Linux LTS","Raspbian","Debian GNU/Linux","CentOS","openSUSE"],"correct":["CentOS"]},
+  {"id":5,"question":"What information can be displayed by top?","type":"mc","choices":["Existing files, ordered by their size.","Running processes, ordered by CPU or RAM consumption.","User accounts, ordered by the number of logins.","User groups, ordered by the number of members.","User accounts, ordered by the number of files."],"correct":["Running processes, ordered by CPU or RAM consumption."]},
+  {"id":6,"question":"Which of the following commands can be used to resolve a DNS name to an IP address?","type":"mc","choices":["dnsname","dns","query","host","iplookup"],"correct":["host"]},
+  {"id":7,"question":"Which of the following outputs comes from the command free?","type":"mc","choices":["21:04:15 up 14 days, 7:43, 3 users, load average: 0.89, 1.00, 0.99","avg-cpu: %user %nice %system %iowait %steal %idle\n34.04 0.03 13.38 1.06 0.00 50.99","Filesystem Size Used Avail Use% Mounted on\n/dev/mapper/vg_ssd-root 25G 20G 3.6G 85%","1.8M tmp","total used free shared buff/cache available\nMem: 16123128 12565680 2011624 412128 1545824 7180416"],"correct":["total used free shared buff/cache available\nMem: 16123128 12565680 2011624 412128 1545824 7180416"]},
+  {"id":8,"question":"What is true about the dmesg command? (Choose two.)","type":"mc","choices":["It traces the execution of a command and shows each step the program carries out.","It sends messages to the command lines of all current user sessions.","It displays the content of the Linux kernel's ring buffer.","It immediately outputs all new messages written to the system journal.","It might not display older information because it was overwritten by newer information."],"correct":["It displays the content of the Linux kernel's ring buffer.","It might not display older information because it was overwritten by newer information."]},
+  {"id":9,"question":"Which of the following outputs could stem from the command last?","type":"mc","choices":["1 ls\n2 cat text.txt\n3 logout","Password for user last changed at Sat Mar 31 16:38:57 EST 2018","Last login: Fri Mar 23 10:56:39 2018 from server.example.com","EXT4-fs (dm-7): mounted filesystem with ordered data mode","root tty2 Wed May 17 21:11 - 21:11 (00:00)"],"correct":["root tty2 Wed May 17 21:11 - 21:11 (00:00)"]},
+  {"id":10,"question":"What is the UID of the user root?","type":"mc","choices":["1","-1","255","65536","0"],"correct":["0"]},
+  {"id":11,"question":"Which permissions are set on a regular file once the permissions have been modified with the command chmod 654 file.txt?","type":"mc","choices":["drw-r-xr--","d-wxr-x--","-wxr-x--x","rwxrw---x","-rw-r-xr--"],"correct":["-rw-r-xr--"]},
+  {"id":12,"question":"What is true about the owner of a file?","type":"mc","choices":["Each file is owned by exactly one user and one group.","The owner of a file always has full permissions when accessing the file.","The user owning a file must be a member of the file's group.","When a user is deleted, all files owned by the user disappear.","The owner of a file cannot be changed once it is assigned to an owner."],"correct":["Each file is owned by exactly one user and one group."]},
+  {"id":13,"question":"Which of the following permissions are set on the /tmp/ directory?","type":"mc","choices":["------rwX","rwSrw-rw-","rwxrwS---","r-xr-X--t","rwxrwxrwt"],"correct":["rwxrwxrwt"]},
+  {"id":14,"question":"Which command adds the new user tux and creates the user's home directory with default configuration files?","type":"mc","choices":["useradd -m tux","usercreate tux","useradd -o default tux","passwd -a tux","defaultuser tux"],"correct":["useradd -m tux"]},
+  {"id":15,"question":"What information is stored in /etc/passwd? (Choose three.)","type":"mc","choices":["The user's storage space limit","The numerical user ID","The username","The encrypted password","The user's default shell"],"correct":["The numerical user ID","The username","The user's default shell"]},
+  {"id":16,"question":"Which of the following tar options handle compression? (Choose two.)","type":"mc","choices":["-bz","-z","-g","-j","-z2"],"correct":["-z","-j"]},
+  {"id":17,"question":"FILL IN THE BLANK: What keyword is used in a shell script to begin a loop? (Specify one keyword only, without any additional information.)","type":"fill","correct":["for"]},
+  {"id":18,"question":"Which of the following commands creates an archive file work.tar from the contents of the directory ./work/?","type":"mc","choices":["tar --new work.tar ./work/","tar -cf work.tar ./work/","tar --create work.tgz --content ./work/","tar work.tar < ./work/","tar work > work.tar"],"correct":["tar -cf work.tar ./work/"]},
+  {"id":19,"question":"Which of the following keys can be pressed to exit less?","type":"mc","choices":["l","x","e","q","!"],"correct":["q"]},
+  {"id":20,"question":"The current directory contains the following file:\n-rwxr-xr-x 1 root root 859688 Feb 7 08:15 test.sh\nGiven that the file is a valid shell script, how can this script be executed? (Choose two.)","type":"mc","choices":["run test.sh","${test.sh}","cmd ./test.sh","./test.sh","bash test.sh"],"correct":["./test.sh","bash test.sh"]},
+  {"id":21,"question":"Which of the following commands sorts the output of the command export-logs?","type":"mc","choices":["export-logs < sort","export-logs > sort","export-logs & sort","export-logs | sort","export-logs <> sort"],"correct":["export-logs | sort"]},
+  {"id":22,"question":"A directory contains the following files: a.txt, b.txt, c.cav. What would be the output of the following shell script?\nfor file in *.txt; do\n  echo $file\ndone","type":"mc","choices":["*.txt","a b","c.cav","a.txt","a.txt\nb.txt"],"correct":["a.txt\nb.txt"]},
+  {"id":23,"question":"Which of the following commands will search for the file foo.txt under the directory /home?","type":"mc","choices":["search /home foo.txt","find /home --file foo.txt","find /home -name foo.txt","find /home foo.txt","search /home --file foo.txt"],"correct":["find /home -name foo.txt"]},
+  {"id":24,"question":"The current directory contains the following file:\n-rw-r--r-- 1 root exec 24551 Apr 2 12:36 test.sh\nThe file contains a valid shell script, but executing this file using ./test.sh leads to this error: bash: ./test.sh: Permission denied.\nWhat should be done in order to successfully execute the script?","type":"mc","choices":["The file's extension should be changed from .sh to .bin.","The execute bit should be set in the file's permissions.","The user executing the script should be added to the exec group.","The SetUID bit should be set in the file's permissions.","The script should be run using #!./test.sh instead of ./test.sh."],"correct":["The execute bit should be set in the file's permissions."]},
+  {"id":25,"question":"What is a Linux distribution?","type":"mc","choices":["The Linux file system as seen from the root account after mounting all file systems.","A bundling of the Linux kernel, system utilities and other software.","The set of rules which governs the distribution of Linux kernel source code.","An operating system based on Linux but incompatible to the regular Linux kernel.","A set of changes to Linux which enable Linux to run on another processor architecture."],"correct":["A bundling of the Linux kernel, system utilities and other software."]},
+  {"id":26,"question":"Which package management tool is used in Red Hat-based Linux Systems?","type":"mc","choices":["portage","rpm","apt-get","dpkg","packagectl"],"correct":["rpm"]},
+  {"id":27,"question":"Which of the following programs is a graphical editor for vector graphics?","type":"mc","choices":["Python","NGINX","Samba","Inkscape","MySQL"],"correct":["Inkscape"]},
+  {"id":28,"question":"Where is the operating system of a Raspberry Pi stored?","type":"mc","choices":["On the master device attached to the Raspberry Pi's IDE bus.","On a read only partition on the Raspberry Pi's firmware, next to the BIOS.","On a removable SD card which is put into the Raspberry Pi.","On a Linux extension module connected to the Raspberry Pi's GPIO pins.","On rewritable flash storage which is built into the Raspberry Pi."],"correct":["On a removable SD card which is put into the Raspberry Pi."]},
+  {"id":29,"question":"What is defined by a Free Software license?","type":"mc","choices":["Details of the technical documentation each contributor has to provide.","The programming languages which may be used to extend the licensed program.","A complete list of libraries required to compile the licensed software.","Limits on the purposes for which the licensed software may be used.","Conditions for modifying and distributing the licensed software."],"correct":["Conditions for modifying and distributing the licensed software."]},
+  {"id":30,"question":"Why are web browser cookies considered dangerous?","type":"mc","choices":["Cookies support identification and tracking of users.","Cookies are always public and accessible to anyone on the internet.","Cookies consume significant amounts of storage and can exhaust disk space.","Cookies store critical data which is lost when a cookie is deleted.","Cookies can contain and execute viruses and malware."],"correct":["Cookies support identification and tracking of users."]},
+  {"id":31,"question":"Which of the following are typical services offered by public cloud providers? (Choose three.)","type":"mc","choices":["Platform as a Service (PaaS)","Infrastructure as a Service (IaaS)","Internet as a Service (IaaS)","Graphics as a Service (GaaS)","Software as a Service (SaaS)"],"correct":["Platform as a Service (PaaS)","Infrastructure as a Service (IaaS)","Software as a Service (SaaS)"]},
+  {"id":32,"question":"Which of the following characters in a shell prompt indicates the shell is running with root privileges?","type":"mc","choices":["!","#","*","&","$"],"correct":["#"]},
+  {"id":33,"question":"Which of the following commands are used to get information on the proper use of ls? (Choose two.)","type":"mc","choices":["option ls","usage ls","manual ls","man ls","info ls"],"correct":["man ls","info ls"]},
+  {"id":34,"question":"What is true about a recursive directory listing?","type":"mc","choices":["It includes the content of sub-directories.","It includes the permissions of the directory listed.","It includes details of file system internals, such as inodes.","It includes ownership information for the files.","It includes a preview of content for each file in the directory."],"correct":["It includes the content of sub-directories."]},
+  {"id":35,"question":"Running the command rm Downloads leads to the following error: rm: cannot remove 'Downloads/': Is a directory. Which of the following commands can be used instead to remove Downloads, assuming Downloads is empty? (Choose two.)","type":"mc","choices":["undir Downloads","rmdir Downloads","dir -r Downloads","rem Downloads","rm -r Downloads"],"correct":["rmdir Downloads","rm -r Downloads"]},
+  {"id":36,"question":"Which of the following directories contains information, documentation and example configuration files for installed software packages?","type":"mc","choices":["/usr/share/doc/","/etc/defaults/","/var/info/","/doc/","/usr/examples/"],"correct":["/usr/share/doc/"]},
+  {"id":37,"question":"Which of the following commands adds the directory /new/dir/ to the PATH environment variable?","type":"mc","choices":["$PATH=/new/dir: $PATH","PATH=/new/dir: PATH","export PATH=/new/dir: PATH","export $PATH=/new/dir: $PATH","export PATH=/new/dir: $PATH"],"correct":["export PATH=/new/dir: $PATH"]},
+  {"id":38,"question":"A user is currently in the directory /home/user/Downloads/ and runs the command ls ../Documents/. Assuming it exists, which directory's content is displayed?","type":"mc","choices":["/home/user/Documents/","/home/user/Documents/Downloads/","/home/user/Downloads/Documents/","/Documents/","/home/Documents"],"correct":["/home/user/Documents/"]},
+  {"id":39,"question":"A directory contains the following three files: texts1.txt, texts2.txt, texts3.csv. Which command copies the two files ending in .txt to the /tmp/ directory?","type":"mc","choices":["cp *.txt /tmp/","cp. \\*.txt /tmp/","cp ?.txt /tmp/","cp $?.txt /tmp","cp ??.txt /tmp/"],"correct":["cp *.txt /tmp/"]},
+  {"id":40,"question":"FILL IN THE BLANK: When typing a long command line at the shell, what single character can be used to split a command across multiple lines?","type":"fill","correct":["\\"]},
+  {"id":41,"question":"Which of the following DNS record types hold an IP address? (Choose two.)","type":"mc","choices":["NS","AAAA","MX","A","CNAME"],"correct":["AAAA","A"]},
+  {"id":42,"question":"Which of the following values could be a process ID on Linux?","type":"mc","choices":["/bin/bash","60b503cd-019e-4300-a7be-922f074ef5ce","/sys/pid/9a14","fff3","21398"],"correct":["21398"]},
+  {"id":43,"question":"Which of the following is a protocol used for automatic IP address configuration?","type":"mc","choices":["NFS","LDAP","SMTP","DNS","DHCP"],"correct":["DHCP"]},
+  {"id":44,"question":"Which of the following devices represents a hard disk partition?","type":"mc","choices":["/dev/ttyS0","/dev/sata0","/dev/part0","/dev/sda2","/dev/sda/p2"],"correct":["/dev/sda2"]},
+  {"id":45,"question":"Which of the following statements regarding Linux hardware drivers is correct?","type":"mc","choices":["Drivers are regular Linux programs which have to be run by the user who wants to use a device.","Drivers are not used by Linux because the BIOS handles all access to hardware on behalf of Linux.","Drivers are stored on their devices and are copied by the Linux kernel when a new device is attached.","Drivers are downloaded from the vendor's driver repository when a new device is attached.","Drivers are either compiled into the Linux kernel or are loaded as kernel modules."],"correct":["Drivers are either compiled into the Linux kernel or are loaded as kernel modules."]},
+  {"id":46,"question":"What can be found in the /proc/ directory?","type":"mc","choices":["One directory per installed program.","One device file per hardware device.","One file per existing user account.","One directory per running process.","One log file per running service."],"correct":["One directory per running process."]},
+  {"id":47,"question":"A new server needs to be installed to host services for a period of several years. Throughout this time, the server should receive important security updates from its Linux distribution. Which of the following Linux distributions meet these requirements? (Choose two.)","type":"mc","choices":["Ubuntu Linux LTS","Fedora Linux","Debian GNU/Linux Unstable","Ubuntu Linux non-LTS","Red Hat Enterprise Linux"],"correct":["Ubuntu Linux LTS","Red Hat Enterprise Linux"]},
+  {"id":48,"question":"Which of the following directories must be mounted with read and write access if it resides on its own dedicated file system?","type":"mc","choices":["/opt","/lib","/etc","/var","/usr"],"correct":["/var"]},
+  {"id":49,"question":"The ownership of the file doku.odt should be changed. The new owner is named tux. Which command accomplishes this change?","type":"mc","choices":["chmod u=tux doku.odt","newuser doku.odt tux","chown tux doku.odt","transfer tux: doku.odt","passwd doku.odt:tux"],"correct":["chown tux doku.odt"]},
+  {"id":50,"question":"What happens to a file residing outside the home directory when the file owner's account is deleted? (Choose two.)","type":"mc","choices":["During a file system check, the file is moved to /lost+found.","The file is removed from the file system.","The UID of the former owner is shown when listing the file's details.","The user root is set as the new owner of the file.","Ownership and permissions of the file remain unchanged."],"correct":["The UID of the former owner is shown when listing the file's details.","Ownership and permissions of the file remain unchanged."]},
+  {"id":51,"question":"Which statements about the directory /etc/skel are correct? (Choose two.)","type":"mc","choices":["The personal user settings of root are stored in this directory.","The files from the directory are copied to the home directory of the new user when starting the system.","The files from the directory are copied to the home directory of a new user when the account is created.","The directory contains a default set of configuration files used by the useradd command.","The directory contains the global settings for the Linux system."],"correct":["The files from the directory are copied to the home directory of a new user when the account is created.","The directory contains a default set of configuration files used by the useradd command."]},
+  {"id":52,"question":"What is true about links in a Linux file system?","type":"mc","choices":["A symbolic link can only point to a file and not to a directory.","A hard link can only point to a directory and never to a file.","When the target of the symbolic link is moved, the link is automatically updated.","A symbolic link can point to a file on another file system.","Only the root user can create hard links."],"correct":["A symbolic link can point to a file on another file system."]},
+  {"id":53,"question":"Which files are the source of the information in the following output? (Choose two.)\nuid=1000(bob) gid=1000(bob) groups=1000(bob),10(wheel),150(wireshark),989(docker),1001(libvirt)","type":"mc","choices":["/etc/id","/etc/passwd","/etc/group","/home/index","/var/db/users"],"correct":["/etc/passwd","/etc/group"]},
+  {"id":54,"question":"Which of the following tasks can the command passwd accomplish? (Choose two.)","type":"mc","choices":["Change a user's username.","Change a user's password.","Create a new user account.","Create a new user group.","Lock a user account."],"correct":["Change a user's password.","Lock a user account."]},
+  {"id":55,"question":"What is true about the su command?","type":"mc","choices":["It can only be used by the user root.","It runs a shell or command as another user.","It changes the name of the main administrator account.","It locks the root account in specific time frames.","It is the default shell of the root account."],"correct":["It runs a shell or command as another user."]},
+  {"id":56,"question":"FILL IN THE BLANK: What parameter of ls prints a recursive listing of a directory's content? (Specify ONLY the option name without any values or parameters.)","type":"fill","correct":["-R"]},
+  {"id":57,"question":"Most commands on Linux can display information on their usage. How can this information typically be displayed?","type":"mc","choices":["By running the command with the option ?! or ?=!.","By running the command with the option /doc or /documentation.","By running the command with the option -h or --help.","By running the command with the option -m or --manpage.","By running the command with the option /? or /??"],"correct":["By running the command with the option -h or --help."]},
+  {"id":58,"question":"Which of the following commands shows the absolute path to the current working directory?","type":"mc","choices":["cd ..","pwd","ls -l","cd ~/home","who"],"correct":["pwd"]},
+  {"id":59,"question":"Which of the following commands output the content of the file 'Texts 2.txt'? (Choose two.)","type":"mc","choices":["cat 'Texts 2.txt'","cat -- Texts 2.txt","cat |Texts 2.txt|","cat 'Texts\\ 2.txt'","cat Texts\\ 2.txt"],"correct":["cat 'Texts 2.txt'","cat Texts\\ 2.txt"]},
+  {"id":60,"question":"Which command displays file names only and no additional information, including hidden files?","type":"mc","choices":["ls -lh","ls -l","ls -alh","ls -nl","ls -a"],"correct":["ls -a"]},
+  {"id":61,"question":"What is the purpose of the PATH environment variable?","type":"mc","choices":["It increases security by preventing commands from running in certain locations.","It specifies the location of a user's home directory.","It indicates the location of the default shell to be used when a user logs in.","It contains the absolute path to the current directory.","It allows the execution of commands without the need to know the location of the executable."],"correct":["It allows the execution of commands without the need to know the location of the executable."]},
+  {"id":62,"question":"Which of the following commands sets the variable USERNAME to the value bob?","type":"mc","choices":["set USERNAME bob","$USERNAME==bob","var USERNAME=bob","USERNAME<=bob","USERNAME=bob"],"correct":["USERNAME=bob"]},
+  {"id":63,"question":"FILL IN THE BLANK: What command displays manual pages? (Specify ONLY the command without any path or parameters.)","type":"fill","correct":["man"]},
+  {"id":64,"question":"Which command copies the contents of the directory /etc/, including all sub-directories, to /root/?","type":"mc","choices":["copy /etc /root","cp -r /etc/* /root","cp -v /etc/* /root","rcp /etc/* /root","cp -R /etc/*.* /root"],"correct":["cp -r /etc/* /root"]},
+  {"id":65,"question":"Which of the following commands puts the lines of the file data.csv into alphabetical order?","type":"mc","choices":["a..z data.csv","sort data.csv","abc data.csv","wc -s data.csv","grep --sort data.csv"],"correct":["sort data.csv"]},
+  {"id":66,"question":"Which of the following examples shows the general structure of a for loop in a shell script?","type":"mc","choices":["for *.txt as file => echo $file","for *.txt ( echo $i )","for file in *.txt\n  do\n    echo $i\n  done","for ls *.txt exec {} \\;","foreach @{file} {echo $i}"],"correct":["for file in *.txt\n  do\n    echo $i\n  done"]},
+  {"id":67,"question":"Which operator in a regular expression matches the preceding character either zero or one time?","type":"mc","choices":["?","*","+","%","$"],"correct":["?"]},
+  {"id":68,"question":"The file script.sh in the current directory contains:\n#!/bin/bash\necho $MYVAR\n\nThe following commands are used:\nMYVAR=value\n./script.sh\n\nThe result is an empty line. How should MYVAR be set in order to make script.sh display the content of MYVAR?","type":"mc","choices":["!MYVAR=value","env MYVAR=value","MYVAR=value","$MYVAR=value","export MYVAR=value"],"correct":["export MYVAR=value"]},
+  {"id":69,"question":"What is the return value of a shell script after successful execution?","type":"mc","choices":["1","0","-1","-255","255"],"correct":["0"]},
+  {"id":70,"question":"Which of the following commands creates the ZIP archive poems.zip containing all files in the current directory whose names end in .txt?","type":"mc","choices":["zcat *.txt poems.zip","zip poems.zip *.txt","zip cfz poems.zip *.txt","cat *.txt | zip poems.zip","zip *.txt > poems.zip"],"correct":["zip poems.zip *.txt"]},
+  {"id":71,"question":"Which of the following statements are true regarding a typical shell script? (Choose two.)","type":"mc","choices":["It has the executable permission bit set.","It starts with the two character sequence #!.","It is located in /usr/local/scripts/.","It is located in /etc/bash/scripts/.","It is compiled into a binary file compatible with the current machine architecture."],"correct":["It has the executable permission bit set.","It starts with the two character sequence #!."]},
+  {"id":72,"question":"Which of the following commands extracts the contents of the compressed archive file1.tar.gz?","type":"mc","choices":["ztar file1.tar.gz","tar -xzf file1.tar.gz","tar --extract file1.tar.gz","detar file1.tar.gz","tar -czf file1.tar.gz"],"correct":["tar -xzf file1.tar.gz"]},
+  {"id":73,"question":"Which of the following commands finds all lines in the file operating-systems.txt which contain the term linux, regardless of the case?","type":"mc","choices":["igrep linux operating-systems.txt","less -i linux operating-systems.txt","grep -i linux operating-systems.txt","cut linux operating-systems.txt","cut [Ll][Ii][Nn][Uu][Xx] operating-systems.txt"],"correct":["grep -i linux operating-systems.txt"]},
+  {"id":74,"question":"Which one of the following statements concerning Linux passwords is true?","type":"mc","choices":["All passwords can be decrypted using the system administrator's master password.","Passwords may never start with a non-letter.","Users cannot change their password once it has been set.","Passwords are only stored in hashed form.","Passwords may be at most six characters long."],"correct":["Passwords are only stored in hashed form."]},
+  {"id":75,"question":"Which of the following programs are web servers? (Choose two.)","type":"mc","choices":["Apache HTTPD","Postfix","Curl","Dovecot","NGINX"],"correct":["Apache HTTPD","NGINX"]},
+  {"id":76,"question":"Which of the following Linux Distributions is derived from Red Hat Enterprise Linux?","type":"mc","choices":["Raspbian","openSUSE","Debian","Ubuntu","CentOS"],"correct":["CentOS"]},
+  {"id":77,"question":"Which of the following statements is true about Free Software?","type":"mc","choices":["It may be modified by anyone using it.","It must always be available free of charge.","It only runs on Linux.","It is only distributed as a compiled binary.","It is developed by volunteers only."],"correct":["It may be modified by anyone using it."]},
+  {"id":78,"question":"How is a new Linux computing instance provisioned in an IaaS cloud?","type":"mc","choices":["The standard Linux installer has to be run through a remote console.","After buying a Linux distribution, its vendor delivers it to a cloud instance.","The installation has to be prepared in a local virtual machine which is then copied to the cloud.","The cloud hosting organization provides a set of pre-prepared images of popular Linux distributions.","A provider-specific configuration file describing the desired installation is uploaded to the cloud provider."],"correct":["The cloud hosting organization provides a set of pre-prepared images of popular Linux distributions."]},
+  {"id":79,"question":"What are the differences between a private web browser window and a regular web browser window? (Choose three.)","type":"mc","choices":["Private web browser windows do not allow printing or storing websites.","Private web browser windows do not store cookies persistently.","Private web browser windows do not support logins into websites.","Private web browser windows do not keep records in the browser history.","Private web browser windows do not send regular stored cookies."],"correct":["Private web browser windows do not store cookies persistently.","Private web browser windows do not keep records in the browser history.","Private web browser windows do not send regular stored cookies."]},
+  {"id":80,"question":"What is the preferred source for the installation of new applications in a Linux based operating system?","type":"mc","choices":["The vendor's version management system","CD-ROM disk","The distribution's package repository","The vendor's website","Retail store"],"correct":["The distribution's package repository"]}
+];
+
+let mode = null;
+let queue = [];
+let qIndex = 0;
+let correct = 0;
+let startTime = 0;
+let timerInterval = null;
+let answered = false;
+let selectedChoices = new Set();
+let shuffledChoices = [];
+let lastExamResult = null;
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function startLearn() {
+  mode = 'learn';
+  queue = [...QUESTIONS];
+  qIndex = 0; correct = 0;
+  startTime = Date.now();
+  startTimer();
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function startExam() {
+  mode = 'exam';
+  let shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5);
+  queue = shuffled.slice(0, 40);
+  qIndex = 0; correct = 0;
+  startTime = Date.now();
+  startTimer();
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function showSpecific() { showScreen('spec'); }
+
+function goSpecific() {
+  const n = parseInt(document.getElementById('spec-num').value);
+  if (n < 1 || n > 80 || isNaN(n)) { alert('Enter a number between 1 and 80.'); return; }
+  const q = QUESTIONS.find(q => q.id === n);
+  if (!q) { alert('Question not found.'); return; }
+  mode = 'specific';
+  queue = [q];
+  qIndex = 0; correct = 0;
+  startTime = Date.now();
+  startTimer();
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const el = document.getElementById('q-timer');
+    if (el) el.textContent = '\u23F1 ' + formatTime(Math.floor((Date.now() - startTime) / 1000));
+  }, 1000);
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const LETTERS = ['A','B','C','D','E'];
+
+function renderQuestion() {
+  answered = false;
+  selectedChoices = new Set();
+  const q = queue[qIndex];
+  const total = queue.length;
+
+  document.getElementById('q-label').textContent = 'QUESTION ' + q.id;
+  document.getElementById('q-counter').textContent = (qIndex + 1) + ' / ' + total;
+  document.getElementById('progress-fill').style.width = ((qIndex / total) * 100) + '%';
+
+  const qtextEl = document.getElementById('q-text');
+  qtextEl.className = 'qtext';
+  qtextEl.textContent = q.question;
+
+  const choicesEl = document.getElementById('q-choices');
+  choicesEl.innerHTML = '';
+
+  const verdict = document.getElementById('verdict');
+  verdict.className = 'verdict';
+  verdict.style.display = 'none';
+
+  document.getElementById('btn-submit').style.display = 'inline-block';
+  document.getElementById('btn-next').style.display = 'none';
+  document.getElementById('btn-submit').disabled = true;
+
+  const hintEl = document.getElementById('q-select-hint');
+  if (q.type === 'fill' || q.correct.length === 1) {
+    hintEl.style.display = 'none';
+  } else {
+    const need = q.correct.length;
+    hintEl.style.display = 'inline-flex';
+    hintEl.className = 'select-hint';
+    hintEl.innerHTML = `&#9656; Select <span class="sel-count" id="sel-count">0</span>&nbsp;/&nbsp;${need} answers`;
+  }
+
+  if (q.type === 'fill') {
+    const wrap = document.createElement('div');
+    wrap.className = 'fill-input-wrap';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'fill-input';
+    inp.id = 'fill-answer';
+    inp.placeholder = 'Type your answer...';
+    inp.autocomplete = 'off';
+    inp.spellcheck = false;
+    inp.addEventListener('input', () => {
+      document.getElementById('btn-submit').disabled = inp.value.trim() === '';
+    });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') submitAnswer(); });
+    wrap.appendChild(inp);
+    choicesEl.appendChild(wrap);
+    setTimeout(() => inp.focus(), 50);
+  } else {
+    shuffledChoices = shuffle(q.choices);
+    const div = document.createElement('div');
+    div.className = 'choices';
+    shuffledChoices.forEach((choice, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.dataset.index = i;
+      btn.innerHTML = '<span class="choice-letter">' + LETTERS[i] + '</span><span>' + choice.replace(/\n/g, '\n') + '</span>';
+      btn.addEventListener('click', () => toggleChoice(i, btn));
+      div.appendChild(btn);
+    });
+    choicesEl.appendChild(div);
+  }
+}
+
+function toggleChoice(i, btn) {
+  if (answered) return;
+  if (selectedChoices.has(i)) {
+    selectedChoices.delete(i);
+    btn.classList.remove('selected');
+  } else {
+    selectedChoices.add(i);
+    btn.classList.add('selected');
+  }
+
+  const q = queue[qIndex];
+  const need = q.correct.length;
+  const got  = selectedChoices.size;
+
+  const countEl = document.getElementById('sel-count');
+  if (countEl) countEl.textContent = got;
+  const hintEl = document.getElementById('q-select-hint');
+  if (hintEl && need > 1) {
+    hintEl.className = 'select-hint' + (got === need ? ' done' : '');
+  }
+
+  document.getElementById('btn-submit').disabled = (got !== need);
+}
+
+function submitAnswer() {
+  if (answered) return;
+  answered = true;
+  const q = queue[qIndex];
+  let isRight = false;
+
+  if (q.type === 'fill') {
+    const userAns = document.getElementById('fill-answer').value.trim();
+    document.getElementById('fill-answer').disabled = true;
+    isRight = q.correct.some(c => c.toLowerCase() === userAns.toLowerCase());
+    showVerdict(isRight, q.correct.join(' or '), null);
+  } else {
+    const selectedTexts = [...selectedChoices].map(i => shuffledChoices[i]).sort();
+    const correctTexts = [...q.correct].sort();
+    isRight = JSON.stringify(selectedTexts) === JSON.stringify(correctTexts);
+
+    const choiceBtns = document.querySelectorAll('.choice-btn');
+    choiceBtns.forEach(btn => {
+      btn.disabled = true;
+      const i = parseInt(btn.dataset.index);
+      const txt = shuffledChoices[i];
+      const isCorrect = q.correct.includes(txt);
+      const isSelected = selectedChoices.has(i);
+      if (isCorrect) btn.classList.add('correct-reveal');
+      else if (isSelected && !isCorrect) btn.classList.add('wrong-reveal');
+    });
+
+    showVerdict(isRight, q.correct.join('\n'), selectedTexts.length > 0 ? selectedTexts.join('\n') : null);
+  }
+
+  if (isRight) correct++;
+
+  document.getElementById('btn-submit').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'inline-block';
+  document.getElementById('btn-next').textContent = (qIndex + 1 >= queue.length) ? 'FINISH \u2192' : 'NEXT \u2192';
+}
+
+function showVerdict(isRight, correctAns, userAns) {
+  const v = document.getElementById('verdict');
+  const vt = document.getElementById('verdict-text');
+  const va = document.getElementById('verdict-answer');
+
+  v.style.display = 'block';
+  v.className = 'verdict show ' + (isRight ? 'right' : 'wrong');
+  vt.textContent = isRight ? '\u2714 CORRECT!' : '\u2716 WRONG!';
+  va.innerHTML = isRight ? '' : 'Correct answer: <span>' + correctAns + '</span>';
+}
+
+function nextQuestion() {
+  qIndex++;
+  if (qIndex >= queue.length) {
+    endSession();
+  } else {
+    renderQuestion();
+  }
+}
+
+function confirmEnd() {
+  if (confirm('End exam now and see results?')) endSession();
+}
+
+function endSession() {
+  clearInterval(timerInterval);
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const pct = Math.round((correct / queue.length) * 100);
+
+  document.getElementById('r-score').textContent = correct;
+  document.getElementById('r-wrong').textContent = queue.length - correct;
+  document.getElementById('r-pct').textContent = pct + '%';
+  document.getElementById('r-time').textContent = formatTime(elapsed);
+
+  const bar = document.getElementById('grade-bar');
+  bar.style.background = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)';
+  bar.style.boxShadow = pct >= 70 ? 'var(--glow-green)' : 'none';
+  setTimeout(() => { bar.style.width = pct + '%'; }, 100);
+
+  const nameSection = document.getElementById('name-entry-section');
+  if (mode === 'exam') {
+    lastExamResult = { correct, elapsed, total: queue.length };
+    nameSection.style.display = 'block';
+    document.getElementById('player-name').value = '';
+    setTimeout(() => document.getElementById('player-name').focus(), 300);
+  } else {
+    nameSection.style.display = 'none';
+    lastExamResult = null;
+  }
+
+  showScreen('results');
+}
+
+async function submitLeaderboard() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name) { document.getElementById('player-name').focus(); return; }
+  if (!lastExamResult) return;
+
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        correct: lastExamResult.correct,
+        total: lastExamResult.total,
+        elapsed: lastExamResult.elapsed
+      })
+    });
+  } catch (e) {}
+
+  lastExamResult = null;
+  document.getElementById('name-entry-section').style.display = 'none';
+  showLeaderboard();
+}
+
+async function showLeaderboard() {
+  showScreen('leaderboard');
+  const el = document.getElementById('leaderboard-content');
+  el.innerHTML = '<div class="lb-loading">&#9632; loading scores...</div>';
+
+  let board = [];
+  try {
+    const res = await fetch(API_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error();
+    board = await res.json();
+  } catch (e) {
+    el.innerHTML = '<div class="lb-empty">Could not load scores. Check connection.</div>';
+    return;
+  }
+
+  if (board.length === 0) {
+    el.innerHTML = '<div class="lb-empty">No scores yet. Complete an Exam Simulator session to appear here.</div>';
+    return;
+  }
+
+  const rankLabels = ['gold','silver','bronze'];
+  let html = '<table class="lb-table"><thead><tr>'
+    + '<th>#</th><th>Name</th><th>Score</th><th>Time</th><th>Date</th>'
+    + '</tr></thead><tbody>';
+  board.forEach((entry, i) => {
+    const rankClass = rankLabels[i] || '';
+    const pct = Math.round((entry.correct / entry.total) * 100);
+    const scoreClass = pct >= 70 ? 's-good' : pct >= 50 ? 's-ok' : 's-bad';
+    html += `<tr>
+      <td class="lb-rank ${rankClass}">${i + 1}</td>
+      <td class="lb-name">${escHtml(entry.name)}</td>
+      <td class="lb-score ${scoreClass}">${entry.correct}/${entry.total} <span style="color:var(--dim);font-size:11px;">(${pct}%)</span></td>
+      <td class="lb-time">${formatTime(entry.elapsed)}</td>
+      <td class="lb-date">${escHtml(entry.date)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

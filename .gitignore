@@ -1,0 +1,9 @@
+node_modules/
+data/
+ios/
+android/app/build/
+android/build/
+.android-sdk-cache/
+*.db
+*.db-wal
+*.db-shm

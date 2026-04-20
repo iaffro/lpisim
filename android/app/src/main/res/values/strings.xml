@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">LPI Exam Trainer</string>
+    <string name="title_activity_main">LPI Exam Trainer</string>
+    <string name="package_name">com.lpisim.app</string>
+    <string name="custom_url_scheme">com.lpisim.app</string>
+</resources>
