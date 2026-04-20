@@ -20,27 +20,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Add iOS platform (allow pod install to fail)
+      - name: Add iOS platform
         run: npx cap add ios
-        continue-on-error: true
 
-      - name: Find and patch Podfile
-        run: |
-          find . -name Podfile | head -20
-          PODFILE=$(find . -name Podfile | grep -v node_modules | head -1)
-          echo "Patching: $PODFILE"
-          sed -i '' "s/platform :ios, '[^']*'/platform :ios, '14.0'/" "$PODFILE"
-          cat "$PODFILE" | head -5
-
-      - name: Install CocoaPods dependencies
-        run: |
-          cd ios/App
-          pod install
+      - name: Resolve Swift Package dependencies
+        run: xcodebuild -resolvePackageDependencies -project ios/App/App.xcodeproj
 
       - name: Build (unsigned)
         run: |
           xcodebuild \
-            -workspace ios/App/App.xcworkspace \
+            -project ios/App/App.xcodeproj \
             -scheme App \
             -configuration Release \
             -sdk iphoneos \
