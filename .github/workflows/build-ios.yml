@@ -20,11 +20,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Add iOS platform
-        run: npx cap add ios
-
-      - name: Sync web assets
-        run: npx cap sync ios
+      - name: Add iOS platform (allow pod install to fail)
+        run: npx cap add ios || true
 
       - name: Set iOS minimum deployment target
         run: sed -i '' "s/platform :ios, '[^']*'/platform :ios, '14.0'/" ios/App/Podfile
