@@ -26,6 +26,9 @@ jobs:
       - name: Sync web assets
         run: npx cap sync ios
 
+      - name: Set iOS minimum deployment target
+        run: sed -i '' "s/platform :ios, '[^']*'/platform :ios, '14.0'/" ios/App/Podfile
+
       - name: Install CocoaPods dependencies
         run: |
           cd ios/App
